@@ -1,0 +1,10 @@
+.vscode/
+build/
+bin/
+obj/
+*.elf
+*.bin
+*.nds
+.qt/
+CMakeFiles/
+dev/

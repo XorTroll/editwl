@@ -1,0 +1,14 @@
+site_name: Nintendo DS(i) format documentation
+repo_url: https://github.com/XorTroll/editwl
+
+nav:
+  - Home: index.md
+  - Formats:
+    - Common format structure: fmt/common.md
+    - BMG format: fmt/bmg.md
+  - editwl:
+    - C++ API/documentation: "doxygen/index.html"
+    - Custom BMG-XML format: editwl/fmt/bmg-xml.md
+
+theme:
+  name: readthedocs
