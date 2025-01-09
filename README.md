@@ -13,6 +13,7 @@
     - [editwl-bin](#editwl-bin-1)
   - [TODO](#todo)
     - [libeditwl](#libeditwl-1)
+    - [editwl-bin](#editwl-bin-2)
   - [Support](#support)
   - [Credits](#credits)
 
@@ -127,7 +128,7 @@ make
 
 ### libeditwl
 
-- Migrate code from [libnedit](https://github.com/XorTroll/NitroEdit):
+- Migrate remaining code/formats from [libnedit](https://github.com/XorTroll/NitroEdit):
 
   - NCGR
 
@@ -160,6 +161,16 @@ make
 - Support ignored attributes in NSCR data (check the links credited below)
 
 - Support PMCP section in NCLRs
+
+- More that I could list here
+
+### editwl-bin
+
+- More commands
+
+- More modules
+
+> TODO: make this list more explicit
 
 ## Support
 
