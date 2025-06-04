@@ -28,6 +28,26 @@ namespace twl::util {
         return LzCompress(data, data_size, ver, DefaultRepeatSize, out_data, out_size);
     }
 
+    inline Result LzCompressV10(const u8 *data, const size_t data_size, u8 *&out_data, size_t &out_size) {
+        return LzCompress(data, data_size, LzVersion::LZ10, DefaultRepeatSize, out_data, out_size);
+    }
+
     Result LzDecompress(const u8 *data, u8 *&out_data, size_t &out_size, LzVersion &out_ver, size_t &out_used_data_size);
+
+    inline Result LzDecompress(const u8 *data, u8 *&out_data, size_t &out_size) {
+        LzVersion dummy_ver;
+        size_t dummy_size;
+        return LzDecompress(data, out_data, out_size, dummy_ver, dummy_size);
+    }
+
+    inline Result LzDecompress(const u8 *data, u8 *&out_data, size_t &out_size, LzVersion &out_ver) {
+        size_t dummy_size;
+        return LzDecompress(data, out_data, out_size, out_ver, dummy_size);
+    }
+
+    inline Result LzDecompress(const u8 *data, u8 *&out_data, size_t &out_size, size_t &out_used_data_size) {
+        LzVersion dummy_ver;
+        return LzDecompress(data, out_data, out_size, dummy_ver, out_used_data_size);
+    }
 
 }

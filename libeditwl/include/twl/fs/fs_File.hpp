@@ -81,7 +81,7 @@ namespace twl::fs {
             }
 
             template<typename C>
-            inline Result ReadNullTerminatedString(std::basic_string<C> &out_str, const size_t tmp_buf_size = 0x200) {
+            inline Result ReadTerminatedString(std::basic_string<C> &out_str, const C terminator, const size_t tmp_buf_size = 0x200) {
                 // Note: this approach is significantly faster than the classic read-char-by-char approach, specially when reading hundreds of strings ;)
                 out_str.clear();
                 
@@ -99,11 +99,10 @@ namespace twl::fs {
                     delete[] buf;
                 });
 
-                size_t read_size;
                 TWL_R_TRY(this->ReadBuffer(buf, r_size));
 
                 for(size_t i = 0; i < r_size; i++) {
-                    if(buf[i] == static_cast<C>(0)) {
+                    if(buf[i] == terminator) {
                         TWL_R_TRY(this->SetAbsoluteOffset(old_offset + i + 1));
                         out_str = std::basic_string<C>(buf, i);
                         TWL_R_SUCCEED();
@@ -112,6 +111,11 @@ namespace twl::fs {
                 
                 TWL_R_TRY(this->SetAbsoluteOffset(old_offset));
                 return ReadNullTerminatedString(out_str, tmp_buf_size * 2);
+            }
+            
+            template<typename C>
+            inline Result ReadNullTerminatedString(std::basic_string<C> &out_str, const size_t tmp_buf_size = 0x200) {
+                return this->ReadTerminatedString(out_str, static_cast<C>(0), tmp_buf_size);
             }
 
             template<typename C>

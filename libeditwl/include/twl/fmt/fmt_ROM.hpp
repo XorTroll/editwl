@@ -94,7 +94,16 @@ namespace twl::fmt {
             u32 debug_rom_size;
             u32 debug_ram_address;
             u32 reserved_3;
-            u8 reserved_4[0x90];
+            u8 reserved_4[0x50];
+            u32 arm9i_rom_offset;
+            u32 reserved_5;
+            u32 arm9i_ram_addr;
+            u32 arm9i_rom_size;
+            u32 arm7i_rom_offset;
+            u32 sd_mmc_dev_list;
+            u32 arm7i_ram_addr;
+            u32 arm7i_rom_size;
+            u8 reserved_6[0x20];
 
             // Note: helpers since these strings don't neccessarily end with a null character, so std::string(<c_str>) wouldn't work as expected there
 

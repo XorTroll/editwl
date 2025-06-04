@@ -269,7 +269,7 @@ namespace twl::fmt {
         TWL_R_TRY(wf.GetOffset(base_rom_size));
         this->header.rom_size = base_rom_size;
 
-        auto capacity_size = base_rom_size;
+        u32 capacity_size = base_rom_size;
         capacity_size |= capacity_size >> 16;
         capacity_size |= capacity_size >> 8;
         capacity_size |= capacity_size >> 4;
@@ -280,13 +280,15 @@ namespace twl::fmt {
             capacity_size = 0x20000;
         }
 
-        auto capacity = -18;
+        int capacity = -18;
         while(capacity_size != 0) {
             capacity_size >>= 1;
             capacity++;
         }
-
-        this->header.device_capacity = static_cast<u8>(std::min(0, capacity));
+        if(capacity < 0) {
+            capacity = 0;
+        }
+        this->header.device_capacity = static_cast<u8>(capacity);
 
         // TODO: RSA signature
 

@@ -139,6 +139,42 @@ namespace {
             R_TRY_ERRLOG(out_arm9_ovt_file.WriteVector(rom.arm9_ovl_table), "Unable to save ARM9 overlay table file to '" << out_arm9_ovt_path << "'");
         }
     }
+
+    /*
+    void ExtractOverlays(const std::string &rom_path, const std::string &out_arm7_ovl_path, const std::string &out_arm9_ovl_path) {
+        twl::fs::StdioFile rom_file(rom_path);
+        R_TRY_ERRLOG(rom_file.OpenRead(), "Unable to open ROM file '" << rom_path << "'");
+
+        twl::ScopeGuard close_file([&]() {
+            rom_file.Close();
+        });
+
+        twl::fmt::ROM rom;
+        R_TRY_ERRLOG(rom.ReadFrom(rom_file), "Unable to read ROM file '" << rom_path << "'");
+
+        if(!out_arm7_ovt_path.empty()) {
+            twl::fs::StdioFile out_arm7_ovt_file(out_arm7_ovt_path);
+            R_TRY_ERRLOG(out_arm7_ovt_file.OpenWrite(), "Unable to open out ARM7 overlay table file '" << out_arm7_ovt_path << "'");
+
+            twl::ScopeGuard close_out_file([&]() {
+                out_arm7_ovt_file.Close();
+            });
+
+            R_TRY_ERRLOG(out_arm7_ovt_file.WriteVector(rom.arm7_ovl_table), "Unable to save ARM7 overlay table file to '" << out_arm7_ovt_path << "'");
+        }
+
+        if(!out_arm9_ovt_path.empty()) {
+            twl::fs::StdioFile out_arm9_ovt_file(out_arm9_ovt_path);
+            R_TRY_ERRLOG(out_arm9_ovt_file.OpenWrite(), "Unable to open out ARM9 overlay table file '" << out_arm9_ovt_path << "'");
+
+            twl::ScopeGuard close_out_file([&]() {
+                out_arm9_ovt_file.Close();
+            });
+
+            R_TRY_ERRLOG(out_arm9_ovt_file.WriteVector(rom.arm9_ovl_table), "Unable to save ARM9 overlay table file to '" << out_arm9_ovt_path << "'");
+        }
+    }
+    */
     
     void ExtractCodes(const std::string &rom_path, const std::string &out_arm7_code_path, const std::string &out_arm9_code_path) {
         twl::fs::StdioFile rom_file(rom_path);
@@ -265,6 +301,14 @@ namespace {
         args::ValueFlag<std::string> extract_ovts_rom_file(extract_ovts_required, "rom_file", "Input ROM file", {'r', "rom"});
         args::ValueFlag<std::string> extract_ovts_out_arm7_ovt_file(extract_ovts_required, "out_arm7_ovt_file", "Output ARM7 overlay table file", {'7', "out7"});
         args::ValueFlag<std::string> extract_ovts_out_arm9_ovt_file(extract_ovts_required, "out_arm9_ovt_file", "Output ARM9 overlay table file", {'9', "out9"});
+
+        /*
+        args::Command extract_ovl(commands, "extract-overlay", "Extract/export ARM7 or ARM9 raw (binary) overlay");
+        args::Group extract_ovl_required(extract_ovl, "", args::Group::Validators::All);
+        args::ValueFlag<std::string> extract_ovl_rom_file(extract_ovl_required, "rom_file", "Input ROM file", {'r', "rom"});
+        args::ValueFlag<std::string> extract_ovl_processor(extract_ovl_required, "processor", "Processor (ARM7 or ARM9)", {'p', "proc"});
+        args::ValueFlag<std::string> extract_ovl_out_ovl_file(extract_ovl_required, "out_ovl_file", "Output overlay file", {'o', "out"});
+        */
         
         args::Command extract_code(commands, "extract-code", "Extract/export ARM7 or ARM9 code binary");
         args::Group extract_code_required(extract_code, "", args::Group::Validators::All);
@@ -331,6 +375,21 @@ namespace {
 
             ExtractOverlayTables(rom_path, out_arm7_ovt_path, out_arm9_ovt_path);
         }
+        /*
+        else if(extract_ovl) {
+            const auto rom_path = extract_ovl_rom_file.Get();
+            const auto processor = extract_ovl_processor.Get();
+            const auto out_ovl_path = extract_ovl_out_ovl_file.Get();
+
+            twl::fmt::ROM::ProcessorType type;
+            if(!ParseProcessorType(processor, type)) {
+                return;
+            }
+
+            const auto is_7 = type == twl::fmt::ROM::ProcessorType::ARM7;
+            ExtractOverlays(rom_path, is_7 ? out_ovl_path : "", is_7 ? "" : out_ovl_path);
+        }
+        */
         else if(extract_code) {
             const auto rom_path = extract_code_rom_file.Get();
             const auto processor = extract_code_processor.Get();

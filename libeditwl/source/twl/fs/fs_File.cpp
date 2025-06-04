@@ -25,7 +25,7 @@ namespace twl::fs {
     Result BufferReaderWriter::SetOffset(const ssize_t offset, const Whence whence) {
         switch(whence) {
             case Whence::Begin: {
-                if(offset > this->buf_size) {
+                if(offset > (ssize_t)this->buf_size) {
                     TWL_R_FAIL(ResultUnableToSeekBuffer);
                 }
 
@@ -56,7 +56,6 @@ namespace twl::fs {
             TWL_R_FAIL(ResultUnableToReadBuffer);
         }
 
-        const auto actual_read_size = std::min(read_size, this->buf_size - this->offset);
         memcpy(read_buf, reinterpret_cast<u8*>(this->buf) + this->offset, read_size);
 
         this->offset += read_size;
@@ -138,8 +137,6 @@ namespace twl::fs {
                 // Check for LZ77 comp
                 u32 lz_header;
                 if(this->ReadBufferImpl(&lz_header, sizeof(lz_header)).IsSuccess()) {
-                    TWL_R_TRY(this->SetOffsetImpl(0, Whence::Begin));
-
                     util::LzVersion lz_version;
                     if(util::LzValidateCompressed(lz_header, lz_version).IsSuccess()) {
                         this->comp = FileCompression::LZ77;
@@ -165,8 +162,9 @@ namespace twl::fs {
             this->comp = comp;
         }
 
-        this->opened = true;
+        TWL_R_TRY(this->SetOffsetImpl(0, Whence::Begin));
 
+        this->opened = true;
         TWL_R_SUCCEED();
     }
 
@@ -226,6 +224,8 @@ namespace twl::fs {
         if(!this->IsOpened()) {
             TWL_R_FAIL(ResultFileAlreadyClosed);
         }
+
+        this->opened = false;
 
         if(this->IsCompressed()) {
             TWL_R_TRY(this->CompressWrite());
@@ -389,10 +389,6 @@ namespace twl::fs {
     }
     
     Result BufferFile::CloseImpl() {
-        if(this->IsValid()) {
-            this->rw.Dispose();
-        }
-
         TWL_R_SUCCEED();
     }
 

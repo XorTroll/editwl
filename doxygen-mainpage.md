@@ -1,4 +1,4 @@
 
 # Welcome!
 
-[Visit the Project Documentation](../index.html)
+[Back to the `editwl` wiki](../index.html)
