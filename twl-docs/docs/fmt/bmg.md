@@ -11,6 +11,19 @@ BMG (likely standing for "binary message"/"basic message") is a format used by s
     - [Message data](#message-data)
     - [Escape sequences](#escape-sequences)
   - [`MID1` section](#mid1-section)
+  - [Games using the format](#games-using-the-format)
+    - [Mario Kart DS](#mario-kart-ds)
+    - [Super Mario 64 DS](#super-mario-64-ds)
+    - [Animal Crossing: Wild World](#animal-crossing-wild-world)
+    - [DSi Menu (launcher)](#dsi-menu-launcher)
+    - [Practise English!](#practise-english)
+    - [Download Play data found in many games (utility.bin)](#download-play-data-found-in-many-games-utilitybin)
+    - [Nintendogs DS](#nintendogs-ds)
+    - [New Super Mario Bros.](#new-super-mario-bros)
+    - [WarioWare D.I.Y](#warioware-diy)
+    - [Chibi-Robo! Park Patrol](#chibi-robo-park-patrol)
+    - [Custom Robo Arena](#custom-robo-arena)
+    - [DS Rakubiki Jiten](#ds-rakubiki-jiten)
 
 BMGs start like usual DS formats, containing a slightly different [common header](common.md):
 
@@ -109,3 +122,184 @@ This section starts with a [common header](common.md#common-section-header) and 
 This section also has (always?) end zero-byte padding to be 0x20-aligned.
 
 The message ID count is the same as the message count in the previous `INF1` section. IDs are apparently used in games with multiple BMG files, where the same message is present in several BMG files, where the ID is probably used to access the message (since the message is probably in different indexes in the data section).
+
+## Games using the format
+
+While it appears to be a standard format, unlike with other SDK formats, no two games have the same code for loading BMG files. It looks like the SDK does not provide code, so each game developers had to parse the files themselves (either that or the SDK code changed completely game after game, which is highly unlikely).
+
+Note that this list is not fully exhaustive, as only a handful of games have been searched, but the explored coves cover enough variety to show the half-standardized nature of this format.
+
+### Mario Kart DS
+
+Found files:
+
+- `/data/CharacterKartSelect_<lang>.carc/kart_select.bmg`
+
+- `/data/Main2D_<lang>.carc/common.bmg`
+
+- `/data/Static2D.carc/MBChild_<lang>.bmg`
+
+- `/data/Scene/Emblem_<lang>.carc/emblem.bmg`
+
+- `/data/Scene/Ghost_<lang>.carc/ghost.bmg`
+
+- `/data/Scene/Menu_<lang>.carc/*.bmg`
+
+- `/data/Scene/MenuDL_<lang>.carc/*.bmg`
+
+- `/data/Scene/Option_<lang>.carc/option.bmg`
+
+- `/data/Scene/Record_<lang>.carc/record.bmg`
+
+- `/data/Scene/Result_<lang>.carc/secret.bmg`
+
+- `/data/Scene/StaffRoll.carc/staffRoll.bmg`
+
+- `/data/Scene/StaffRoll_<lang>.carc/staffRoll.bmg`
+
+- `/data/Scene/Title_<lang>.carc/title.bmg`
+
+- `/data/Scene/WiFiMenu_<lang>.carc/wifi.bmg`
+
+- `/data/Scene/WLMenu_<lang>.carc/banner.bmg`
+
+  - Used encoding: UTF-16
+
+  - Found sections: `INF1` + `DAT1`
+
+### Super Mario 64 DS
+
+- `/data/message/msg_data_<lang>.bin`
+
+  - Used encoding: CP1252 (according to header), supposedly is Shift-JIS in reality...?
+  
+  - Found sections: `INF1` + `DAT1`
+
+  - LZ77-compressed files
+  
+  - Magics are endian-swapped! (`1FNI`, `1TAD`, etc)
+
+  - Has a final file padding of 0xFF
+
+### Animal Crossing: Wild World
+
+- `/script/<lang>/<...>/*.bmg`
+
+  - Used encoding: UTF-8
+
+  - Found sections: `INF1` + `DAT1`
+
+### DSi Menu (launcher)
+
+- `/message/ww/<lang>/menu_common.bmg`
+
+  - Used encoding: UTF-16
+
+  - Found sections: `INF1` + `DAT1`
+
+### Practise English!
+
+- `/common/emsg/<...>/*.bmg`
+
+- `/common/tmsg/<...>/*.bmg`
+
+- `/<lang>/emsg/<...>/*.bmg`
+
+- `/<lang>/tmsg/<...>/*.bmg`
+
+  - Used encoding: UTF-8
+
+  - Found sections: `INF1` + `DAT1` + `STR1` (custom section?) (`DAT1` is empty while `STR1` has the actual message strings...?)
+
+  - Uses a variant format:
+
+    - `INF1` section entries are of size 0x10 and contain the following:
+
+    | Offset | Size                    | Description                                                                   |
+    |--------|-------------------------|-------------------------------------------------------------------------------|
+    | 0x00   | 0x04                    | Message index (not an offset!)                                                |
+    | 0x04   | 0x02                    | Start offset relative to STR1 section + 0x8 (skipping magic and section size) |
+    | 0x06   | 0x02                    | End offset relative to STR1 section + 0x8                                     |
+    | 0x08   | 0x02                    | Previous end offset + 1 (?)                                                   |
+    | 0x0A   | 0x01                    | Unknown                                                                       |
+    | 0x0B   | 0x01                    | Unknown                                                                       |
+    | 0x0C   | 0x01                    | Unknown                                                                       |
+    | 0x0D   | 0x03                    | Unknown                                                                       |
+
+    - STR1 seems to be made of:
+
+    | Offset | Size                    | Description         |
+    |--------|-------------------------|---------------------|
+    | 0x00   | 0x04                    | Magic               |
+    | 0x04   | 0x04                    | Section size        |
+    | 0x08   | Variable                | Message string data |
+
+    - String data appears to be made of NULL-terminated strings (presumably so they can be directly read as a valid `char*` in code).
+
+    - An unused byte is left after the header section, so that strings begin at `STR1` + 0x9.
+
+### Download Play data found in many games (utility.bin)
+
+- `/msg/<lang>-bmg.l`
+
+  - Used encoding: UTF-16
+
+  - Found sections: `INF1` + `DAT1`
+
+  - LZ77-compressed files
+
+### Nintendogs DS
+
+- `/Message/<lang>/*.bmg`
+
+  - Used encoding: UTF-16
+
+  - Found sections: `INF1`, `DAT1`, `MID1`, `FLI1` (only large ones?), `FLW1` (only large ones?)
+
+### New Super Mario Bros.
+
+- `/script/data.bmg.<lang>`, `/script/game.bmg.<lang>`, `/script/course.bmg.<lang>`
+
+  - Used encoding: UTF-16
+
+  - Found sections: `INF1`, `DAT1`
+
+### WarioWare D.I.Y
+
+- `/E/Data/Mesg*.bmg` 
+
+  - Used encoding: UTF-8
+
+  - Found sections: `INF1`, `DAT1` (loading code only checks for these two sections anyway)
+
+### Chibi-Robo! Park Patrol
+
+Found files:
+
+- `/Msg*.bmg`
+
+  - Used encoding: UTF-8
+
+  - Found sections: `INF1`, `DAT1`
+
+  - Uses C-like formatting instead of escape sequences (literals like `%02d` directly in strings)
+
+### Custom Robo Arena
+
+- `/msg/*.cbmg`
+
+  - Used encoding: CP1252
+
+  - Found sections: `INF1`, `DAT1`
+
+  - Magics are endian-swapped! (`1FNI`, `1TAD`, etc)
+
+### DS Rakubiki Jiten
+
+Found files:
+
+- `/message/iplmsg_<lang>.bmg`
+
+  - Used encoding: UTF-8
+
+  - Found sections: `INF1`, `DAT1`

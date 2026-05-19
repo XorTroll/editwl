@@ -11,4 +11,4 @@ nav:
     - Custom BMG-XML format: editwl/fmt/bmg-xml.md
 
 theme:
-  name: readthedocs
+  name: material
