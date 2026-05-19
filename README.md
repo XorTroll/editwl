@@ -1,18 +1,19 @@
 # editwl
 
-> [C++ libraries and PC tools for Nintendo DS(i) ROM formats/editing](https://xortroll.github.io/editwl/)
+> [C++ libraries, PC tools and documentation for Nintendo DS(i) ROM formats/editing (work-in-progress)](https://xortroll.github.io/editwl/)
 
 - [editwl](#editwl)
   - [libeditwl](#libeditwl)
     - [Supported formats](#supported-formats)
   - [editwl-bin](#editwl-bin)
-    - [UI](#ui)
-    - [CLI](#cli)
+    - [GUI mode](#gui-mode)
+    - [CLI mode](#cli-mode)
   - [Building](#building)
-    - [libnedit](#libnedit)
-    - [editwl-bin](#editwl-bin-1)
-  - [TODO](#todo)
     - [libeditwl](#libeditwl-1)
+    - [editwl-bin](#editwl-bin-1)
+    - [Docs](#docs)
+  - [TODO](#todo)
+    - [libeditwl](#libeditwl-2)
     - [editwl-bin](#editwl-bin-2)
   - [Support](#support)
   - [Credits](#credits)
@@ -41,9 +42,7 @@ Note that these libraries work by loading everything (entire ROMs/files/etc) int
 
 This tool may be used as both a graphical editor (by opening it with no arguments or a single file argument, typically by drag-dropping the file in the executable from a UI file browser) or as a command-line tool, getting the best of both worlds.
 
-### UI
-
-Features:
+### GUI mode
 
 - BMG
 
@@ -51,7 +50,7 @@ Features:
 
   - Save/load in a custom XML format for easier message editing (see [docs](https://xortroll.github.io/editwl/)).
 
-### CLI
+### CLI mode
 
 - BMG: `editwl-bin bmg`
 
@@ -109,7 +108,7 @@ This are brief descriptions of what each command does, check the help subcommand
 
 ## Building
 
-### libnedit
+### libeditwl
 
 These libraries have basically no dependencies (other than the standard) and can easily be embedded in any C/C++ project.
 
@@ -122,6 +121,20 @@ mkdir build
 cd build
 cmake ..
 make
+```
+
+### Docs
+
+Inside `twl-docs`, run MkDocs:
+
+```sh
+mkdocs build
+```
+
+For `libeditwl` code docs, run Doxygen on the repository root:
+
+```sh
+doxygen
 ```
 
 ## TODO
