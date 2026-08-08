@@ -1,20 +1,21 @@
 # editwl
 
-> [C++ libraries, PC tools and documentation for Nintendo DS(i) ROM formats/editing (work-in-progress)](https://xortroll.github.io/editwl/)
+### [C++ libraries, PC tools and documentation for Nintendo DS(i) ROM formats/editing (work-in-progress)](https://xortroll.github.io/editwl/)
 
 - [editwl](#editwl)
+    - [C++ libraries, PC tools and documentation for Nintendo DS(i) ROM formats/editing (work-in-progress)](#c-libraries-pc-tools-and-documentation-for-nintendo-dsi-rom-formatsediting-work-in-progress)
   - [libeditwl](#libeditwl)
     - [Supported formats](#supported-formats)
-  - [editwl-bin](#editwl-bin)
+  - [editwl](#editwl-1)
     - [GUI mode](#gui-mode)
     - [CLI mode](#cli-mode)
   - [Building](#building)
     - [libeditwl](#libeditwl-1)
-    - [editwl-bin](#editwl-bin-1)
+    - [editwl](#editwl-2)
     - [Docs](#docs)
   - [TODO](#todo)
     - [libeditwl](#libeditwl-2)
-    - [editwl-bin](#editwl-bin-2)
+    - [editwl](#editwl-3)
   - [Support](#support)
   - [Credits](#credits)
 
@@ -22,9 +23,7 @@
 
 [`libeditwl`](libeditwl) libraries are the core component of this project. They consist on lightweight C++ libraries for DS(i) ROM format reading, writing, editing and more.
 
-While the libraries are not properly documented yet, it can be helpful to check [editwl-bin modules](editwl-bin/modules) as examples.
-
-Note that these libraries work by loading everything (entire ROMs/files/etc) into memory (similar to other existing DS(i) tools/libraries). In worst cases (loading big ROMs with compressed files), the code may allocate hundreds of MB to store everything.
+> Note that these libraries work by loading everything (entire ROMs/files/etc) into memory (similar to other existing DS(i) tools/libraries). In worst cases (loading big ROMs with compressed files), the code may allocate hundreds of MB to store everything. This should not be problematic on any modern system, but it's always worth noting ;)
 
 ### Supported formats
 
@@ -36,9 +35,9 @@ Note that these libraries work by loading everything (entire ROMs/files/etc) int
 
 - DWC utility archives ("utility.bin")
 
-## editwl-bin
+## editwl
 
-[`editwl-bin`](editwl-bin) is (yet another) desktop Nintendo DS(i) ROM editor, made from scratch and inspired on already existing ones, aiming to mimic the best of them. It is modular, hence it may be extended with custom format modules.
+[`editwl`](editwl-bin) is (yet another) desktop Nintendo DS(i) ROM editor, made from scratch and inspired on already existing ones, aiming to mimic the best of them.
 
 This tool may be used as both a graphical editor (by opening it with no arguments or a single file argument, typically by drag-dropping the file in the executable from a UI file browser) or as a command-line tool, getting the best of both worlds.
 
@@ -52,59 +51,59 @@ This tool may be used as both a graphical editor (by opening it with no argument
 
 ### CLI mode
 
-- BMG: `editwl-bin bmg`
+- BMG: `editwl bmg`
 
-  - List messages: `editwl-bin bmg list -i/--in=<bmg-file> [-v/--verbose]`
+  - List messages: `editwl bmg list -i/--in=<bmg-file> [-v/--verbose]`
 
-    - Example: `editwl-bin bmg list --in=data.bmg`
+    - Example: `editwl bmg list --in=data.bmg`
   
-  - Get (print) specific message: `editwl-bin bmg get -i/--in=<bmg-file> --idx=<msg-idx>`
+  - Get (print) specific message: `editwl bmg get -i/--in=<bmg-file> --idx=<msg-idx>`
 
-    - Example (get second message, thus index `1`): `editwl-bin get -i file.bmg --idx=1`
+    - Example (get second message, thus index `1`): `editwl get -i file.bmg --idx=1`
 
-  - Create BMG: `editwl-bin bmg create -i/--in=<bmg-xml-file> -o/--out=<bmg-file>`
+  - Create BMG: `editwl bmg create -i/--in=<bmg-xml-file> -o/--out=<bmg-file>`
 
-    - Example: `editwl-bin bmg create --in=msgs.xml -o gen.bmg`
+    - Example: `editwl bmg create --in=msgs.xml -o gen.bmg`
 
-  - Convert BMG (to XML): `editwl-bin bmg convert -i/--in=<bmg-file> -o/--out=<xml-file>`
+  - Convert BMG (to XML): `editwl bmg convert -i/--in=<bmg-file> -o/--out=<xml-file>`
 
-    - Example: `editwl-bin bmg convert -i data.bmg -o plain_data.xml`
+    - Example: `editwl bmg convert -i data.bmg -o plain_data.xml`
 
-- ROM: `editwl-bin rom`
+- ROM: `editwl rom`
 
-  - Show ROM information: `editwl-bin rom info -r/--rom=<rom-file>`
+  - Show ROM information: `editwl rom info -r/--rom=<rom-file>`
 
-    - Example: `editwl-bin rom info -r game.nds`
+    - Example: `editwl rom info -r game.nds`
 
-  - Extract (binary) header: `editwl-bin rom extract-header -r/--rom=<rom-file> -o/--out=<header-bin-file>`
+  - Extract (binary) header: `editwl rom extract-header -r/--rom=<rom-file> -o/--out=<header-bin-file>`
 
-    - Example: `editwl-bin rom extract-header --rom=rom.nds --out=header.bin`
+    - Example: `editwl rom extract-header --rom=rom.nds --out=header.bin`
 
-  - Extract (binary) overlay table: `editwl-bin rom extract-overlay-table -r/--rom=<rom-file> -p/--proc=<processor> -o/--out=<ovt-bin-file>`
+  - Extract (binary) overlay table: `editwl rom extract-overlay-table -r/--rom=<rom-file> -p/--proc=<processor> -o/--out=<ovt-bin-file>`
 
-    - Example: `editwl-bin rom extract-overlay-table --rom=rom.nds --proc=arm9 --out=ovt.bin`
+    - Example: `editwl rom extract-overlay-table --rom=rom.nds --proc=arm9 --out=ovt.bin`
 
-  - Extract (binary) overlay tables: `editwl-bin rom extract-overlay-tables -r/--rom=<rom-file> -7/--out7=<ovt7-bin-file> -9/--out9=<ovt9-bin-file>`
+  - Extract (binary) overlay tables: `editwl rom extract-overlay-tables -r/--rom=<rom-file> -7/--out7=<ovt7-bin-file> -9/--out9=<ovt9-bin-file>`
 
-    - Example: `editwl-bin rom extract-overlay-tables --rom=rom.nds --out7=ovt7.bin -9 ovt9.bin`
+    - Example: `editwl rom extract-overlay-tables --rom=rom.nds --out7=ovt7.bin -9 ovt9.bin`
 
-  - Extract (binary) code: `editwl-bin rom extract-code -r/--rom=<rom-file> -p/--proc=<processor> -o/--out=<code-bin-file>`
+  - Extract (binary) code: `editwl rom extract-code -r/--rom=<rom-file> -p/--proc=<processor> -o/--out=<code-bin-file>`
 
-    - Example: `editwl-bin rom extract-code --rom=rom.nds --proc=arm7 --out=arm7.bin`
+    - Example: `editwl rom extract-code --rom=rom.nds --proc=arm7 --out=arm7.bin`
 
-  - Extract (binary) codes: `editwl-bin rom extract-codes -r/--rom=<rom-file> -7/--out7=<code7-bin-file> -9/--out9=<code9-bin-file>`
+  - Extract (binary) codes: `editwl rom extract-codes -r/--rom=<rom-file> -7/--out7=<code7-bin-file> -9/--out9=<code9-bin-file>`
 
-    - Example: `editwl-bin rom extract-codes --rom=rom.nds --out7=arm7.bin -9 arm9.bin`
+    - Example: `editwl rom extract-codes --rom=rom.nds --out7=arm7.bin -9 arm9.bin`
 
-  - Replace (binary) code: `editwl-bin rom replace-code -r/--rom=<rom-file> -p/--proc=<processor> -i/--in=<code-bin-file> -o/--out=<new-rom-file>`
+  - Replace (binary) code: `editwl rom replace-code -r/--rom=<rom-file> -p/--proc=<processor> -i/--in=<code-bin-file> -o/--out=<new-rom-file>`
 
-    - Example: `editwl-bin rom replace-code --rom=rom.nds --proc=arm7 --in=arm7.bin --out=new.nds`
+    - Example: `editwl rom replace-code --rom=rom.nds --proc=arm7 --in=arm7.bin --out=new.nds`
 
-- Replace (binary) codes: `editwl-bin rom replace-codes -r/--rom=<rom-file> -7/--in7=<code7-bin-file> -9/--in9=<code9-bin-file> -o/--out=<new-rom-file>`
+- Replace (binary) codes: `editwl rom replace-codes -r/--rom=<rom-file> -7/--in7=<code7-bin-file> -9/--in9=<code9-bin-file> -o/--out=<new-rom-file>`
 
-    - Example: `editwl-bin rom replace-codes --rom=rom.nds -7 arm7.bin --in9=arm9.bin -o new.nds`
+    - Example: `editwl rom replace-codes --rom=rom.nds -7 arm7.bin --in9=arm9.bin -o new.nds`
 
-This are brief descriptions of what each command does, check the help subcommand for each main subcommand for more info: `editwl-bin <cmd> -h/--help`, like `editwl-bin bmg -h` or `editwl-bin rom --help`.
+This are brief descriptions of what each command does, check the help subcommand for each main subcommand for more info: `editwl <cmd> -h/--help`, like `editwl bmg -h` or `editwl rom --help`.
 
 ## Building
 
@@ -112,14 +111,11 @@ This are brief descriptions of what each command does, check the help subcommand
 
 These libraries have basically no dependencies (other than the standard) and can easily be embedded in any C/C++ project.
 
-### editwl-bin
+### editwl
 
-This project is built using make, CMake and Qt:
+This project is built using make, CMake and Qt. The current build system just requires you to run Make on the project directory:
 
 ```sh
-mkdir build
-cd build
-cmake ..
 make
 ```
 
@@ -177,7 +173,7 @@ doxygen
 
 - More that I could list here
 
-### editwl-bin
+### editwl
 
 - More commands
 
@@ -200,4 +196,4 @@ Any suggestions, ideas and contributions are always welcome ;)
 
 - The [nintendo-lz](https://gitlab.com/DarkKirb/nintendo-lz) Rust crate was really helpful in order to understand and implement LZ10/LZ11 compression formats in C++.
 
-- `editwl-bin` uses [args](https://github.com/Taywee/args) C++ libraries to parse command-line arguments.
+- `editwl` uses [args](https://github.com/Taywee/args) C++ libraries to parse command-line arguments.

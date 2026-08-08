@@ -5,8 +5,8 @@ mkdir -p docs/doxygen
 
 doxygen
 
-cd twl-docs
+cd editwl-docs
 mkdocs build
 cd ..
 
-cp -r twl-docs/site/* docs/
+cp -r editwl-docs/site/* docs/

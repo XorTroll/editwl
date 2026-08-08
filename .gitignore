@@ -1,5 +1,6 @@
 .vscode/
 .clangd
+compile_flags.txt
 build/
 bin/
 obj/
