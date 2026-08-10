@@ -1,6 +1,17 @@
+#include "qdom.h"
+#include "twl/fmt/nfs/nfs_NitroFs.hpp"
+#include "twl/fs/fs_File.hpp"
+#include "twl/twl_Include.hpp"
+#include <QFile>
+#include <algorithm>
+#include <cstdio>
+#include <filesystem>
+#include <memory>
 #include <rom/rom.hpp>
 #include <args.hxx>
+#include <string>
 #include <twl/fmt/fmt_ROM.hpp>
+#include <utility>
 
 #define R_TRY_ERRLOG(rc, ...) { \
     const auto _tmp_rc = (rc); \
@@ -275,6 +286,216 @@ namespace {
         R_TRY_ERRLOG(rom.WriteTo(out_rom_file), "Unable to save output ROM file '" << out_rom_path << "'");
     }
 
+    namespace {
+
+        void ExtractNitroDirectory(const std::filesystem::path &base_path, const std::filesystem::path &cur_rel_path, const bool verbose, const twl::fmt::nfs::NitroDirectory &dir, QDomDocument &file_id_doc, QDomElement &file_id_elem) {
+            const auto dir_rel_path = cur_rel_path / dir.name;
+            std::filesystem::create_directory(base_path / dir_rel_path);
+
+            for(const auto &child_dir: dir.dirs) {
+                ExtractNitroDirectory(base_path, dir_rel_path, verbose, child_dir, file_id_doc, file_id_elem);
+            }
+            for(const auto &child_file: dir.files) {
+                const auto file_rel_path = dir_rel_path / child_file.name;
+                const auto file_path = base_path / file_rel_path;
+                auto f = fopen(file_path.c_str(), "wb");
+                if(f != nullptr) {
+                    twl::ScopeGuard close_file([&]() {
+                        fclose(f);
+                    });
+
+                    fwrite(child_file.inner_file.GetBuffer(), child_file.inner_file.GetBufferSize(), 1, f);
+                }
+                else {
+                    std::cerr << "Unable to open file '" << file_path.string() << "'" << std::endl;
+                    return;
+                }
+
+                auto file_elem = file_id_doc.createElement("file");
+                file_elem.setAttribute("id", QString::number(child_file.file_id));
+                file_elem.setAttribute("path", QString::fromStdString(file_rel_path.string()));
+                file_id_elem.appendChild(file_elem);
+
+                if(verbose) {
+                    std::cout << "-- Extracted " << file_rel_path << "..." << std::endl;
+                }
+            }
+        }
+
+    }
+
+    void ExtractNitroFs(const std::string &rom_path, const std::string &out_dir, const bool verbose) {
+        twl::fs::StdioFile rom_file(rom_path);
+        R_TRY_ERRLOG(rom_file.OpenRead(), "Unable to open ROM file '" << rom_path << "'");
+
+        twl::ScopeGuard close_file([&]() {
+            rom_file.Close();
+        });
+
+        twl::fmt::ROM rom;
+        R_TRY_ERRLOG(rom.ReadFrom(rom_file), "Unable to read ROM file '" << rom_path << "'");
+
+        // Save file IDs
+        QDomDocument file_id_doc("xml");
+        auto nitrofs_elem = file_id_doc.createElement("nitrofs");
+        file_id_doc.appendChild(nitrofs_elem);
+
+        std::filesystem::create_directory(out_dir);
+        const auto &nitro_fs = rom.GetFs();
+        const auto out_path = std::filesystem::path(out_dir);
+        ExtractNitroDirectory(out_path / "root", "", verbose, nitro_fs.root_dir, file_id_doc, nitrofs_elem);
+
+        QFile file(out_path / "nitrofs.xml");
+        if(!file.open(QIODevice::WriteOnly)) {
+            std::cerr << "Unable to write XML file '" << file.fileName().toStdString() << "'" << std::endl;
+            return;
+        }
+
+        QTextStream out(&file);
+        file_id_doc.save(out, 4);
+        file.close();
+    }
+
+    namespace {
+
+        bool ReadNitroFsFile(const std::filesystem::path &file_path, twl::u8 *&out_buf, size_t &out_buf_size) {
+            auto f = fopen(file_path.c_str(), "rb");
+            if(f == nullptr) {
+                return false;
+            }
+            twl::ScopeGuard close_file([&]() {
+                fclose(f);
+            });
+
+            if(fseek(f, 0, SEEK_END) != 0) {
+                return false;
+            }
+            const auto file_size = ftell(f);
+            if(file_size < 0) {
+                return false;
+            }
+
+            rewind(f);
+            auto file_buf = new twl::u8[file_size]();
+            if(fread(file_buf, file_size, 1, f) != 1) {
+                return false;
+            }
+
+            out_buf = file_buf;
+            out_buf_size = file_size;
+            return true;
+        }
+
+        bool InsertNitroFile(twl::fmt::nfs::NitroDirectory &root_dir, const twl::u16 file_id, void *file_buf, const size_t file_size, const std::filesystem::path &rel_path) {
+            twl::fmt::nfs::NitroDirectory *cur_iter_dir = std::addressof(root_dir);
+            const auto filename = rel_path.filename().string();
+            for(auto it = rel_path.begin(); it != rel_path.end(); it++) {
+                const auto token = it->string();
+                auto found = false;
+                for(auto &dir: cur_iter_dir->dirs) {
+                    if(dir.name == token) {
+                        cur_iter_dir = std::addressof(dir);
+                        found = true;
+                        break;
+                    }
+                }
+                if(!found) {
+                    if(token == filename) {
+                        cur_iter_dir->files.push_back(twl::fmt::nfs::NitroFile {
+                            .name = filename,
+                            .file_id = file_id,
+                            .inner_file = twl::fs::BufferFile(file_buf, file_size, true)
+                        });
+                        return true;
+                    }
+                    else {
+                        auto &new_dir = cur_iter_dir->dirs.emplace_back();
+                        new_dir.name = token;
+                        cur_iter_dir = std::addressof(new_dir);
+                    }
+                }
+            }
+
+            return false;
+        }
+
+    }
+
+    void ReplaceNitroFs(const std::string &rom_path, const std::string &dir, const std::string &out_rom_path, const bool verbose) {
+        twl::fs::StdioFile rom_file(rom_path);
+        R_TRY_ERRLOG(rom_file.OpenRead(), "Unable to open ROM file '" << rom_path << "'");
+
+        twl::ScopeGuard close_file([&]() {
+            rom_file.Close();
+        });
+
+        twl::fmt::ROM rom;
+        R_TRY_ERRLOG(rom.ReadFrom(rom_file), "Unable to read ROM file '" << rom_path << "'");
+        rom.GetFs().root_dir.files.clear();
+        rom.GetFs().root_dir.dirs.clear();
+        
+        const auto base_path = std::filesystem::path(dir);
+        const auto nitrofs_path = base_path / "root";
+        
+        QDomDocument doc;
+        QFile file(base_path / "nitrofs.xml");
+        if(!file.open(QIODevice::ReadOnly)) {
+            std::cerr << "Unable to open NitroFS XML file" << std::endl;
+            return;
+        }
+
+        twl::ScopeGuard close_xml_file([&]() {
+            file.close();
+        });
+
+        if(!doc.setContent(&file)) {
+            std::cerr << "Unable to read NitroFS XML file" << std::endl;
+            return;
+        }
+
+        twl::fmt::nfs::NitroDirectory new_root_dir;
+        const auto root = doc.documentElement();
+        for(int i = 0; i < root.childNodes().size(); i++) {
+            const auto child_elem = root.childNodes().at(i).toElement();
+            const auto file_id = child_elem.attribute("id").toInt();
+            const auto rel_path = std::filesystem::path(child_elem.attribute("path").toStdString());
+
+            const auto file_path = nitrofs_path / rel_path;
+            if(!std::filesystem::is_regular_file(file_path)) {
+                std::cerr << "Unable to locate NitroFS file '" << rel_path << "' of ID " << file_id << std::endl;
+                return;
+            }
+
+            twl::u8 *file_buf;
+            size_t file_size;
+            if(!ReadNitroFsFile(file_path, file_buf, file_size)) {
+                std::cerr << "Unable to read NitroFS file '" << file_path.string() << "'" << std::endl;
+                return;
+            }
+
+            if(!InsertNitroFile(new_root_dir, file_id, file_buf, file_size, rel_path)) {
+                delete[] file_buf;
+                std::cerr << "Unable to insert NitroFS file '" << rel_path.string() << "'" << std::endl;
+                return;
+            }
+
+            if(verbose) {
+                std::cout << "-- Imported " << rel_path << "..." << std::endl;
+            }
+        }
+
+        rom.GetFs().root_dir = std::move(new_root_dir);
+
+        twl::fs::StdioFile out_rom_file(out_rom_path);
+        R_TRY_ERRLOG(out_rom_file.OpenWrite(), "Unable to open output ROM file '" << out_rom_path << "'");
+        
+        twl::ScopeGuard close_out_rom_file([&]() {
+            out_rom_file.Close();
+        });
+
+        R_TRY_ERRLOG(rom.WriteTo(out_rom_file), "Unable to save output ROM file '" << out_rom_path << "'");
+    }
+
 }
 
 namespace cli::rom {
@@ -340,6 +561,19 @@ namespace cli::rom {
         args::ValueFlag<std::string> replace_codes_arm9_code_file(replace_codes_required, "arm9_code_file", "Input ARM9 code file", {'9', "in9"});
         args::ValueFlag<std::string> replace_codes_out_rom_file(replace_codes_required, "out_rom_file", "Output ROM file", {'o', "out"});
 
+        args::Command extract_nitrofs(commands, "extract-nitrofs", "Extract/export NitroFS filesystem");
+        args::Group extract_nitrofs_required(extract_nitrofs, "", args::Group::Validators::All);
+        args::ValueFlag<std::string> extract_nitrofs_rom_file(extract_nitrofs_required, "rom_file", "Input ROM file", {'r', "rom"});
+        args::ValueFlag<std::string> extract_nitrofs_out_dir(extract_nitrofs_required, "out_dir", "Output directory", {'o', "out"});
+        args::Flag extract_nitrofs_verbose(extract_nitrofs, "verbose", "Verbose output", {'v', "verbose"});
+
+        args::Command replace_nitrofs(commands, "replace-nitrofs", "Replace/import NitroFS filesystem");
+        args::Group replace_nitrofs_required(replace_nitrofs, "", args::Group::Validators::All);
+        args::ValueFlag<std::string> replace_nitrofs_rom_file(replace_nitrofs_required, "rom_file", "Input ROM file", {'r', "rom"});
+        args::ValueFlag<std::string> replace_nitrofs_dir(replace_nitrofs_required, "dir", "Input directory", {'i', "in"});
+        args::ValueFlag<std::string> replace_nitrofs_out_rom_file(replace_nitrofs_required, "out_rom_file", "Output ROM file", {'o', "out"});
+        args::Flag replace_nitrofs_verbose(replace_nitrofs, "verbose", "Verbose output", {'v', "verbose"});
+
         try {
             parser.ParseArgs(args);
         }
@@ -366,6 +600,7 @@ namespace cli::rom {
 
             twl::fmt::ROM::ProcessorType type;
             if(!ParseProcessorType(processor, type)) {
+                std::cerr << "Invalid processor type specified..." << std::endl;
                 return;
             }
 
@@ -387,6 +622,7 @@ namespace cli::rom {
 
             twl::fmt::ROM::ProcessorType type;
             if(!ParseProcessorType(processor, type)) {
+                std::cerr << "Invalid processor type specified..." << std::endl;
                 return;
             }
 
@@ -401,6 +637,7 @@ namespace cli::rom {
 
             twl::fmt::ROM::ProcessorType type;
             if(!ParseProcessorType(processor, type)) {
+                std::cerr << "Invalid processor type specified..." << std::endl;
                 return;
             }
 
@@ -422,6 +659,7 @@ namespace cli::rom {
 
             twl::fmt::ROM::ProcessorType type;
             if(!ParseProcessorType(processor, type)) {
+                std::cerr << "Invalid processor type specified..." << std::endl;
                 return;
             }
 
@@ -435,6 +673,19 @@ namespace cli::rom {
             const auto out_rom_path = replace_codes_out_rom_file.Get();
 
             ReplaceCodes(rom_path, arm7_code_path, arm9_code_path, out_rom_path);
+        }
+        else if(extract_nitrofs) {
+            const auto rom_path = extract_nitrofs_rom_file.Get();
+            const auto out_dir = extract_nitrofs_out_dir.Get();
+
+            ExtractNitroFs(rom_path, out_dir, extract_nitrofs_verbose);
+        }
+        else if(replace_nitrofs) {
+            const auto rom_path = replace_nitrofs_rom_file.Get();
+            const auto dir = replace_nitrofs_dir.Get();
+            const auto out_rom_path = replace_nitrofs_out_rom_file.Get();
+
+            ReplaceNitroFs(rom_path, dir, out_rom_path, replace_nitrofs_verbose);
         }
     }
 

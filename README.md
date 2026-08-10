@@ -99,11 +99,23 @@ This tool may be used as both a graphical editor (by opening it with no argument
 
     - Example: `editwl rom replace-code --rom=rom.nds --proc=arm7 --in=arm7.bin --out=new.nds`
 
-- Replace (binary) codes: `editwl rom replace-codes -r/--rom=<rom-file> -7/--in7=<code7-bin-file> -9/--in9=<code9-bin-file> -o/--out=<new-rom-file>`
+  - Replace (binary) codes: `editwl rom replace-codes -r/--rom=<rom-file> -7/--in7=<code7-bin-file> -9/--in9=<code9-bin-file> -o/--out=<new-rom-file>`
 
     - Example: `editwl rom replace-codes --rom=rom.nds -7 arm7.bin --in9=arm9.bin -o new.nds`
 
-This are brief descriptions of what each command does, check the help subcommand for each main subcommand for more info: `editwl <cmd> -h/--help`, like `editwl bmg -h` or `editwl rom --help`.
+  - Extract NitroFS filesystem: `editwl rom extract-nitrofs -r/--rom=<rom-file> -o/--out=<nitrofs-extract-dir> [-v/--verbose]`
+
+    - Example: `editwl rom extract-nitrofs --rom=rom.nds -o nitrofs_dir`
+
+    - The NitroFS files are stored inside `<nitrofs-extract-dir>/root/...`, and a XML file map is generated at `<nitrofs-extract-dir>/nitrofs.xml` containing a file name + file ID list. This is relevant to ensure proper replacement in the command below, since some games might access files based on file ID and not file name!
+
+  - Replace NitroFS filesystem: `editwl rom replace-nitrofs -r/--rom=<rom-file> -i/--in=<nitrofs-files-dir> -o/--out=<new-rom-file> [-v/--verbose]`
+
+    - Example: `editwl rom replace-nitrofs --rom=rom.nds -i nitrofs_dir --out=new.nds -v`
+
+    - The command expects the file structure in `<nitrofs-files-dir>` to be the same as in the extraction command above.
+
+This are brief descriptions of what each command does, check the help subcommand for each main subcommand for more info: `editwl <cmd> -h/--help`, like `editwl bmg -h` or `editwl rom --help`. Commands inside braces (like `verbose`) are optional.
 
 ## Building
 
@@ -177,9 +189,9 @@ doxygen
 
 - More commands
 
-- More modules
+- More GUI utilities
 
-> TODO: make this list more explicit
+> TODO: make this list more explicit!
 
 ## Support
 

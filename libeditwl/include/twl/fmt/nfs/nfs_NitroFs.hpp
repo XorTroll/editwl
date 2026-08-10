@@ -21,8 +21,6 @@ namespace twl::fmt::nfs {
         std::vector<NitroFile> files;
     };
 
-    struct NitroFileSystem;
-
     struct NitroFileSystem {
         struct DirectoryNameTableEntry {
             u32 start;

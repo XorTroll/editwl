@@ -201,15 +201,15 @@ namespace twl::fs {
                 this->offset = 0;
             }
 
-            inline bool IsValid() {
+            inline bool IsValid() const {
                 return (this->buf != nullptr) && (this->buf_size > 0);
             }
 
-            inline void *GetBuffer() {
+            inline void *GetBuffer() const {
                 return this->buf;
             }
 
-            inline size_t GetBufferSize() {
+            inline size_t GetBufferSize() const {
                 return this->buf_size;
             }
 
@@ -350,15 +350,15 @@ namespace twl::fs {
                 this->rw.Dispose();
             }
 
-            inline bool IsValid() {
+            inline bool IsValid() const {
                 return this->rw.IsValid();
             }
 
-            inline void *GetBuffer() {
+            inline void *GetBuffer() const {
                 return this->rw.GetBuffer();
             }
 
-            inline size_t GetBufferSize() {
+            inline size_t GetBufferSize() const {
                 return this->rw.GetBufferSize();
             }
 
